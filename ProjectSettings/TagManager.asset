@@ -6,6 +6,7 @@ TagManager:
   tags:
   - RubyController
   - PickUp
+  - PickUp2
   layers:
   - Default
   - TransparentFX

@@ -11,13 +11,17 @@ public class RubyController : MonoBehaviour
     public int maxHealth = 5;
     
     public GameObject projectilePrefab;
-    
+    public GameObject bossEnemy;
+    public GameObject projectilePrefab2;
+    public GameObject projectilePrefab3;
     public AudioClip throwSound;
+    public AudioClip secondthrowSound;
     public AudioClip hitSound;
     public AudioClip collectedClip;
 
     public AudioClip winMusic;
     public AudioClip loseMusic;
+    public AudioClip bossMusic;
     public AudioClip backgroundMusic;
 
     public AudioSource audioSource2;
@@ -49,10 +53,17 @@ public class RubyController : MonoBehaviour
 
     public Text LevelText;
     public Text ammoText;
+    public Text lightammoText;
 
-    private bool gameOver;
+    private bool gameOver; // when its true it unlocks the ability to restart
     public static int level;
     private int ammo;
+    private int lightammo;
+
+    private bool bossdefeated;
+
+    private int enemyCount; //keeps boss enemy from infinitely spawning
+    private int soundPlaying; //keeps songs from repeating
 
     // Start is called before the first frame update
     void Start()
@@ -67,7 +78,8 @@ public class RubyController : MonoBehaviour
         score = 0;
         gameOver = false;
         ammo = 4;
-        ammoText.text = "Cogs: " + ammo.ToString();
+        ammoText.text = "[C] Cogs :" + ammo.ToString();
+        lightammoText.text = "";
         level = level + 1;
         //LevelText.text = "Level: " + level.ToString();
     }
@@ -105,6 +117,14 @@ public class RubyController : MonoBehaviour
             }
             Launch();
         }
+        if(Input.GetKeyDown(KeyCode.V))
+        {
+            if(lightammo <= 0)
+            {
+                return;
+            }
+            Launch2();
+        }
         
         if (Input.GetKeyDown(KeyCode.X))
         {
@@ -135,11 +155,29 @@ public class RubyController : MonoBehaviour
         if(level >= 2 && score == 5)
         {
             audioSource2.Stop();
+            while(soundPlaying < 1)
+            {
+            PlaySound(bossMusic, 1.0f);
+            soundPlaying +=1;
+            }
+            while( enemyCount < 1)
+            {
+            Instantiate(bossEnemy, new Vector2(14,-8), Quaternion.identity);
+            Instantiate(projectilePrefab3, new Vector2(15,-12), Quaternion.identity);
+            enemyCount += 1;
+            }
+        }
+        if(level >= 2 && score == 5 && bossdefeated == true)
+        {
+            audioSource2.Stop();
             GameOverText.text = "You Win! Game made by Jordan Carswell";
             RestartText.text = "Press R to restart the game.";
             gameOver = true;
-            PlaySound(winMusic, 0.2f);
-
+            while(soundPlaying < 2)
+            {
+            PlaySound(winMusic, 1.0f);
+            soundPlaying +=1;
+            }
         }
         if(currentHealth == 0)
         {
@@ -148,8 +186,11 @@ public class RubyController : MonoBehaviour
             RestartText.text = "Press R to restart the game.";
             speed = 0.0f;
             gameOver = true;
-            PlaySound(loseMusic, 0.2f);
-            
+            while( soundPlaying < 1)
+            {
+            PlaySound(loseMusic, 1.0f);
+            soundPlaying += 1;
+            }
         }
         if (Input.GetKey(KeyCode.R))
 
@@ -200,6 +241,13 @@ public class RubyController : MonoBehaviour
             healthIncrease = Instantiate(healthIncrease, rigidbody2d.position + Vector2.up * 0.5f, Quaternion.identity);
         }
     }
+    public void BossDefeated(bool yes)
+    {
+        if (yes = true)
+        {
+            bossdefeated = true;
+        }
+    }
     public void changeScore(int point)
     {
         score = score + point;
@@ -216,9 +264,23 @@ public class RubyController : MonoBehaviour
         animator.SetTrigger("Launch");
 
         ammo = ammo - 1;
-        ammoText.text = "Cogs: " + ammo.ToString();
+        ammoText.text = "[C] Cogs: " + ammo.ToString();
         
         PlaySound(throwSound, 1.0f);
+    } 
+    void Launch2()
+    {
+        GameObject bossprojectileObject = Instantiate(projectilePrefab2, rigidbody2d.position + Vector2.up * 0.5f, Quaternion.identity);
+
+        BossProjectile bossprojectile = bossprojectileObject.GetComponent<BossProjectile>();
+        bossprojectile.Launch2(lookDirection, 100);
+
+        animator.SetTrigger("Launch");
+
+        lightammo = lightammo - 1;
+        lightammoText.text = "[V] Light Energy: " + ammo.ToString();
+        
+        PlaySound(secondthrowSound, 1.0f);
     } 
     
     public void PlaySound(AudioClip clip, float volumeScale)
@@ -233,7 +295,13 @@ public class RubyController : MonoBehaviour
             other.gameObject.SetActive(false);
             PlaySound(collectedClip, 1.0f);
             ammo = ammo + 3;
-            ammoText.text = "Cogs: " + ammo.ToString();
+            ammoText.text = "[C] Cogs: " + ammo.ToString();
+        }
+        if (other.gameObject.CompareTag("PickUp2"))
+        {
+            other.gameObject.SetActive(false);
+            lightammo = lightammo + 5;
+            lightammoText.text = "[V] Light Energy:" + lightammo.ToString();
         }
     }
 

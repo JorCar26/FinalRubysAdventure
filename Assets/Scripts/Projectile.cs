@@ -36,7 +36,12 @@ public class Projectile : MonoBehaviour
         {
             e.Fix();
         }
-    
+        BossScript b = other.collider.GetComponent<BossScript>();
+        if ( b != null)
+        {
+            b.damage(-1);
+            Debug.Log("Health Should Decrease");
+        }
         Destroy(gameObject);
     }
 }
